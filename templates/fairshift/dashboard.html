@@ -1,0 +1,150 @@
+{% extends 'fairshift/base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+    <h2>Welcome back, <span class="fw-bold">{{ user.username }}</span></h2>
+    <span class="badge bg-secondary p-2 fs-6">{{ profile.role }} | {{ profile.organization.name }}</span>
+</div>
+
+{% if profile.role == 'WORKER' %}
+<!-- WORKER VIEW -->
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card p-4 text-center bg-white">
+            <h5 class="text-muted fw-bold">Shift Clock</h5>
+            {% if active_shift %}
+                <div class="alert alert-success my-3">🟢 Active Shift since {{ active_shift.check_in|date:"H:i" }}</div>
+                <form method="POST" action="/checkout/">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger w-100 py-2">Check Out</button>
+                </form>
+            {% else %}
+                <div class="alert alert-secondary my-3">⚪ Off the Clock</div>
+                <form method="POST" action="/checkin/">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success w-100 py-2">Check In</button>
+                </form>
+            {% endif %}
+        </div>
+        
+        <div class="card p-4 mt-4 bg-white">
+            <h5 class="text-muted fw-bold">Estimated Earnings</h5>
+            <div class="display-6 fw-bold mt-2 text-success">${{ total_earnings }}</div>
+            <p class="text-muted small mt-1">Based on {{ total_hours }} total hours calculated this cycle.</p>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card p-4 bg-white">
+            <h5 class="fw-bold mb-3">Your Shift Records</h5>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Date</th>
+                            <th>Check In</th>
+                            <th>Check Out</th>
+                            <th>Regular Hrs</th>
+                            <th>Overtime Hrs</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for shift in shifts %}
+                        <tr>
+                            <td>{{ shift.check_in|date:"Y-m-d" }}</td>
+                            <td>{{ shift.check_in|date:"H:i" }}</td>
+                            <td>{% if shift.check_out %}{{ shift.check_out|date:"H:i" }}{% else %}<span class="text-warning">In Progress</span>{% endif %}</td>
+                            <td>{{ shift.regular_hours }}</td>
+                            <td>{{ shift.overtime_hours }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="text-center text-muted">No attendance instances tracked yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="card p-4 mt-4 bg-white">
+            <h5 class="fw-bold mb-3">Submit Anonymous Workplace Feedback</h5>
+            <form method="POST" action="/feedback/">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <textarea name="message" class="form-control" rows="3" required placeholder="Provide direct, un-linked feedback regarding operations..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm px-4">Submit Feedback</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<!-- ADMIN VIEW -->
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card p-4 text-center bg-white">
+            <h5 class="text-muted fw-bold">Total Operations Workforce</h5>
+            <div class="display-5 fw-bold mt-2" style="color: #0A192F;">{{ total_workers }}</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-4 text-center bg-white">
+            <h5 class="text-muted fw-bold">Total Hours Logged</h5>
+            <div class="display-5 fw-bold mt-2 text-primary">{{ aggregate_hours }}</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-4 text-center bg-white">
+            <h5 class="text-muted fw-bold">Total Payroll Estimate</h5>
+            <div class="display-5 fw-bold mt-2 text-success">${{ aggregate_payroll }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mt-2">
+    <div class="col-md-6">
+        <div class="card p-4 bg-white">
+            <h5 class="fw-bold mb-3">Anonymous Feedback Feed</h5>
+            <ul class="list-group list-group-flush">
+                {% for feed in items_feedback %}
+                    <li class="list-group-item bg-transparent py-3">
+                        <p class="mb-1 text-dark">"{{ feed.message }}"</p>
+                        <small class="text-muted">Logged {{ feed.created_at|date:"Y-m-d H:i" }}</small>
+                    </li>
+                {% empty %}
+                    <li class="list-group-item bg-transparent text-center text-muted">No anonymous metrics shared.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card p-4 bg-white">
+            <h5 class="fw-bold mb-3">Workforce Distribution Projections</h5>
+            <canvas id="adminChart" width="400" height="250"></canvas>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const ctx = document.getElementById('adminChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Regular Hours', 'Overtime Hours'],
+                datasets: [{
+                    label: 'Operational Breakdown (Hours)',
+                    data: [{{ regular_sum }}, {{ overtime_sum }}],
+                    backgroundColor: ['#0A192F', '#64FFDA'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+    });
+</script>
+{% endif %}
+{% endblock %}

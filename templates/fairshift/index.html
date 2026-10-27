@@ -1,0 +1,25 @@
+{% extends 'fairshift/base.html' %}
+{% block content %}
+<div class="p-5 mb-4 bg-light rounded-3 text-center border-bottom">
+    <div class="container-fluid py-5">
+        <h1 class="display-4 fw-bold" style="color: #0A192F;">Fair, Safe, and Transparent Workplaces</h1>
+        <p class="col-md-8 fs-4 mx-auto text-muted">Empowering modern workforces across Construction Sites and Academic Institutions with real-time tracking, transparent payroll, and anonymous safety systems aligning with UN SDG 8.</p>
+        <a href="/login/" class="btn btn-primary btn-lg px-5 my-2">Access the Platform</a>
+    </div>
+</div>
+<div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
+    <div class="feature col">
+        <div class="feature-icon d-inline-flex align-items-center justify-content-center text-bg-primary bg-gradient fs-2 mb-3 rounded"></div>
+        <h3 class="fs-4 fw-bold">Transparent Payroll</h3>
+        <p>Real-time calculation of exact base and overtime earnings directly from verified, server-side shift milestones. No manual alteration vectors.</p>
+    </div>
+    <div class="feature col">
+        <h3 class="fs-4 fw-bold">Worker Safety & Anonymity</h3>
+        <p>Encrypted reporting mechanisms for potential site risks or workplace fatigue anomalies to safeguard team health and shield identities from reprisal.</p>
+    </div>
+    <div class="feature col">
+        <h3 class="fs-4 fw-bold">Multi-Industry Core</h3>
+        <p>Engineered for complex operational constraints across infrastructure projects and highly matrixed university networks natively.</p>
+    </div>
+</div>
+{% endblock %}
